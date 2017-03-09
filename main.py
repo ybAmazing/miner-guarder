@@ -10,6 +10,10 @@ from hbthread import HeartBeatThread
 
 from util2 import *
 
+if len(sys.argv) > 1:
+    work_path = sys.argv[1]
+    os.chdir(work_path)
+
 qtCreatorFile = "./main.ui"  # Enter file here.
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile)
@@ -29,7 +33,16 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.conf_btn.clicked.connect(self.select_file_path)
         self.run_btn.clicked.connect(self.run)
         self.stop_btn.clicked.connect(self.stop)
+        self.auto_run_check.stateChanged.connect(self.auto_run_change)
         self.heart_beat_thread = None
+
+        try:
+            key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"SOFTWARE\\Microsoft\Windows\CurrentVersion\Run")
+            winreg.QueryValueEx(key, "miner_helper")
+        except FileNotFoundError:
+            self.auto_run_check.setChecked(False)
+        else:
+            self.auto_run_check.setChecked(True)
 
         if conf_path is not None and coin_type is not None and pool_type is not None:
             try:
@@ -48,6 +61,7 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
             os.chdir(os.path.dirname(conf_path))
             self.heart_beat_thread = HeartBeatThread(worker_id, conf_path, coin_type)
             self.heart_beat_thread.daemon = True
+            self.heart_beat_thread.start()
 
     def select_file_path(self):
         dlg = QtWidgets.QFileDialog()
@@ -69,6 +83,7 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         winreg.SetValue(new_key, "pool_type", winreg.REG_SZ, pool_type)
         winreg.SetValue(new_key, "coin_type", winreg.REG_SZ, coin_type)
         winreg.SetValue(new_key, "conf_path", winreg.REG_SZ, conf_path)
+        winreg.SetValue(new_key, "root_path")
 
         os.chdir(os.path.dirname(conf_path))
         try:
@@ -87,6 +102,7 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.coin_type_list.setEnabled(False)
         self.conf_btn.setEnabled(False)
         self.run_btn.setEnabled(False)
+        self.auto_run_check.setEnabled(False)
         self.stop_btn.setEnabled(True)
 
     def stop(self):
@@ -98,33 +114,47 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.coin_type_list.setEnabled(True)
         self.conf_btn.setEnabled(True)
         self.run_btn.setEnabled(True)
+        self.auto_run_check.setEnabled(True)
         self.stop_btn.setEnabled(False)
+
+    def auto_run_change(self):
+        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"SOFTWARE\\Microsoft\Windows\CurrentVersion\Run", 0,
+                             winreg.KEY_ALL_ACCESS)
+        if getattr(sys, 'frozen', False):
+            application_path = os.path.dirname(sys.executable)
+        else:
+            application_path = os.path.dirname(__file__)
+        app_path = os.path.join(application_path, "矿机助手V2.0.exe")
+        app_path = '"' + app_path + '"'
+        app_path = app_path.replace('/', '\\')
+
+
+        # print(app_path)
+        if self.auto_run_check.isChecked():
+            try:
+                winreg.SetValueEx(key, "miner_helper", 0, winreg.REG_SZ, app_path + ' "' + application_path + '"')
+            except:
+                print(sys.exc_info())
+        else:
+            winreg.DeleteValue(key, "miner_helper")
 
 
 def init():
-    try:
-        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"SOFTWARE\Minerhelper")
-        conf_path = winreg.QueryValue(key, "conf_path")
-        print(conf_path)
-        pool_type = winreg.QueryValue(key, "pool_type")
-        coin_type = winreg.QueryValue(key, "coin_type")
-        return [conf_path, pool_type, coin_type]
-        # [address, worker] = get_address_worker(conf_path)
-        # worker_id = make_id(pool_type, coin_type, address, worker)
-        # print(worker_id)
-        # os.chdir(os.path.dirname(conf_path))
-        # heart_beat_thread = HeartBeatThread(worker_id, conf_path, coin_type)
-        # heart_beat_thread.daemon = True
-        # heart_beat_thread.start()
-        # heart_beat_thread.join()
-        # heart_beat(id)
-    except FileNotFoundError:
-        pass
-
+    key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"SOFTWARE\Minerhelper")
+    conf_path = winreg.QueryValue(key, "conf_path")
+    # print(conf_path)
+    pool_type = winreg.QueryValue(key, "pool_type")
+    coin_type = winreg.QueryValue(key, "coin_type")
+    return [conf_path, pool_type, coin_type]
 
 if __name__ == "__main__":
-    [conf_path, pool_type, coin_type] = init()
+
+    [conf, pool, coin] = [None, None, None]
+    try:
+        [conf, pool, coin] = init()
+    except FileNotFoundError:
+        pass
     app = QtWidgets.QApplication(sys.argv)
-    window = MyApp(conf_path, pool_type, coin_type)
+    window = MyApp(conf, pool, coin)
     window.show()
     sys.exit(app.exec_())
