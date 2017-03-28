@@ -1,10 +1,22 @@
 # -*- coding: utf-8 -*-
+""""
+    File name: hbthread.py
+    Author: amazing
+    Date last modified: 3/28/2017
+    Python Version: 3.5
+"""
+
 import threading
 from time import sleep
 import socket
+import os
 
 from Conf import *
 from strategy import strategy_dict
+
+
+def reboot_os():
+    os.system("shutdown -t 0 -r -f")
 
 
 class HeartBeatThread(threading.Thread):
@@ -47,6 +59,9 @@ class HeartBeatThread(threading.Thread):
                             break
                         if cmd == '1':
                             t = threading.Thread(target=strategy_dict[self.coin_type], args=(self.conf_path,))
+                            t.start()
+                        if cmd == '2':
+                            t = threading.Thread(target=reboot_os)
                             t.start()
                     except:
                         pass

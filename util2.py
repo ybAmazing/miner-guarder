@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+""""
+    File name: util2.py
+    Author: amazing
+    Date last modified: 3/28/2017
+    Python Version: 3.5
+"""
+
 import socket
 import threading
 from time import sleep

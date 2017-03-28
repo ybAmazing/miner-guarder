@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+""""
+    File name: main.py
+    Author: amazing
+    Date last modified: 3/28/2017
+    Python Version: 3.5
+"""
+
 import sys
 import os
 # from PyQt4 import QtGui, uic
@@ -127,16 +134,23 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         app_path = os.path.join(application_path, "矿机助手V2.0.exe")
         app_path = '"' + app_path + '"'
         app_path = app_path.replace('/', '\\')
-
+        bat_path = '"' + self.conf_path.text() + '"'
+        bat_path = bat_path.replace('/', '\\')
 
         # print(app_path)
         if self.auto_run_check.isChecked():
             try:
                 winreg.SetValueEx(key, "miner_helper", 0, winreg.REG_SZ, app_path + ' "' + application_path + '"')
+                winreg.SetValueEx(key, "miner_software", 0, winreg.REG_SZ, bat_path)
             except:
                 print(sys.exc_info())
         else:
             winreg.DeleteValue(key, "miner_helper")
+            winreg.DeleteValue(key, "miner_software")
+
+
+def run_miner_software(conf_path):
+    os.system('"' + conf_path + '"')
 
 
 def init():
@@ -148,7 +162,6 @@ def init():
     return [conf_path, pool_type, coin_type]
 
 if __name__ == "__main__":
-
     [conf, pool, coin] = [None, None, None]
     try:
         [conf, pool, coin] = init()

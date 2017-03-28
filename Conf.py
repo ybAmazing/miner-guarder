@@ -1,7 +1,14 @@
 # -*- coding: utf-8 -*-
+""""
+    File name: Conf.py
+    Author: amazing
+    Date last modified: 3/28/2017
+    Python Version: 3.5
+"""
+
 # HOST = "182.92.104.116"
 HOST = "182.92.104.116"
-PORT = 10999
+PORT = 9999
 
 TIME_SPAN = 20
 

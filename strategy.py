@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+""""
+    File name: strategy.py
+    Author: amazing
+    Date last modified: 3/28/2017
+    Python Version: 3.5
+"""
+
 import os
 from time import sleep
 
