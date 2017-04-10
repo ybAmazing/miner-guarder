@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """"
-    File name: main.py
+    File name: main2.py
     Author: amazing
-    Date last modified: 3/28/2017
+    Date last modified: 4/10/2017
     Python Version: 3.5
 """
 
@@ -33,16 +33,16 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.setWindowTitle("矿机助手V2.0")
         self.setWindowIcon(QtGui.QIcon("icon.png"))
-        pool_list = [F2POOL, ETHFANS]
+        pool_list = [F2POOL, ETHFANS, WATERHOLE]
         coin_list = [ETH, ZEC]
         self.pool_type_list.addItems(pool_list)
         self.coin_type_list.addItems(coin_list)
         self.conf_btn.clicked.connect(self.select_file_path)
         self.run_btn.clicked.connect(self.run)
         self.stop_btn.clicked.connect(self.stop)
-        self.auto_run_check.stateChanged.connect(self.auto_run_change)
         self.heart_beat_thread = None
 
+        # Check if it is self-starting
         try:
             key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"SOFTWARE\\Microsoft\Windows\CurrentVersion\Run")
             winreg.QueryValueEx(key, "miner_helper")
@@ -50,6 +50,7 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
             self.auto_run_check.setChecked(False)
         else:
             self.auto_run_check.setChecked(True)
+        self.auto_run_check.stateChanged.connect(self.auto_run_change)
 
         if conf_path is not None and coin_type is not None and pool_type is not None:
             try:
@@ -90,7 +91,6 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         winreg.SetValue(new_key, "pool_type", winreg.REG_SZ, pool_type)
         winreg.SetValue(new_key, "coin_type", winreg.REG_SZ, coin_type)
         winreg.SetValue(new_key, "conf_path", winreg.REG_SZ, conf_path)
-        winreg.SetValue(new_key, "root_path")
 
         os.chdir(os.path.dirname(conf_path))
         try:
@@ -145,8 +145,11 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
             except:
                 print(sys.exc_info())
         else:
-            winreg.DeleteValue(key, "miner_helper")
-            winreg.DeleteValue(key, "miner_software")
+            try:
+                winreg.DeleteValue(key, "miner_helper")
+                winreg.DeleteValue(key, "miner_software")
+            except EnvironmentError:
+                pass
 
 
 def run_miner_software(conf_path):
