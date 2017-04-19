@@ -6,8 +6,8 @@
     Python Version: 3.5
 """
 
-# HOST = "182.92.104.116"
-HOST = "182.92.104.116"
+
+HOST = "127.0.0.1"
 PORT = 8999
 
 TIME_SPAN = 20
