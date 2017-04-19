@@ -2,18 +2,19 @@
 """"
     File name: main2.py
     Author: amazing
-    Date last modified: 4/10/2017
+    Date last modified: 3/28/2017
     Python Version: 3.5
 """
- 
+
 import sys
 import os
 # from PyQt4 import QtGui, uic
 # from PyQt4.QtGui import *
-from PyQt5 import QtWidgets, uic, QtGui
+from PyQt5 import QtWidgets, uic, QtGui, Qt
 from PyQt5.QtWidgets import *
 import winreg
 from hbthread import HeartBeatThread
+from regedit_helper import prepend_env
 
 from util2 import *
 
@@ -33,6 +34,8 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.setWindowTitle("矿机助手V2.0")
         self.setWindowIcon(QtGui.QIcon("icon.png"))
+        self.setWindowFlags(self.windowFlags() & ~Qt.Qt.WindowMaximizeButtonHint)
+
         pool_list = [F2POOL, ETHFANS, WATERHOLE]
         coin_list = [ETH, ZEC]
         self.pool_type_list.addItems(pool_list)
@@ -41,6 +44,7 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.run_btn.clicked.connect(self.run)
         self.stop_btn.clicked.connect(self.stop)
         self.heart_beat_thread = None
+        self.conf_path.setWordWrap(True)
 
         # Check if it is self-starting
         try:
@@ -137,7 +141,12 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         bat_path = '"' + self.conf_path.text() + '"'
         bat_path = bat_path.replace('/', '\\')
 
-        # print(app_path)
+        # add conf_path to Path environment to enable auto run
+        bat_dir = os.path.dirname(self.conf_path.text())
+        bat_dir = bat_dir
+        bat_dir = bat_dir.replace('/', '\\')
+        prepend_env('Path', [bat_dir])
+
         if self.auto_run_check.isChecked():
             try:
                 winreg.SetValueEx(key, "miner_helper", 0, winreg.REG_SZ, app_path + ' "' + application_path + '"')
@@ -148,8 +157,17 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
             try:
                 winreg.DeleteValue(key, "miner_helper")
                 winreg.DeleteValue(key, "miner_software")
+
             except EnvironmentError:
                 pass
+
+    def closeEvent(self, event):
+        try:
+            event.accept()
+            if self.heart_beat_thread is not None:
+                self.stop()
+        except Exception as e:
+            print(str(e))
 
 
 def run_miner_software(conf_path):
