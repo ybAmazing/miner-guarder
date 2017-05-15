@@ -59,8 +59,25 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         if conf_path is not None and coin_type is not None and pool_type is not None:
             try:
                 worker_id = make_id_from_file(conf_path, pool_type, coin_type)
+                print(worker_id)
+                print('in init')
             except:
                 return
+
+            # check the user has signed up
+            # try:
+            #     if not login(worker_id):
+            #         msg = QMessageBox()
+            #         msg.setIcon(QMessageBox.Information)
+            #
+            #         msg.setText("认证失败，请注册之后再使用！")
+            #         msg.setWindowTitle("提示")
+            #         msg.setStandardButtons(QMessageBox.Ok)
+            #
+            #         msg.exec_()
+            #         return
+            # except:
+            #     return
 
             self.conf_path.setText(conf_path)
             self.pool_type_list.setCurrentIndex(POOL2INDEX[pool_type])
@@ -71,6 +88,8 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
             self.run_btn.setEnabled(False)
 
             os.chdir(os.path.dirname(conf_path))
+
+            # start the heartbeat thread
             self.heart_beat_thread = HeartBeatThread(worker_id, conf_path, coin_type)
             self.heart_beat_thread.daemon = True
             self.heart_beat_thread.start()
@@ -99,12 +118,29 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         os.chdir(os.path.dirname(conf_path))
         try:
             worker_id = make_id_from_file(conf_path, pool_type, coin_type)
+            print(worker_id)
+            print('in run')
         except:
             msg = QMessageBox()
             msg.setWindowTitle("提示")
             msg.setText("配置信息不正确，请检查文件位置和内容！")
             msg.exec_()
             return
+
+        # check the user has signed up
+        # try:
+        #     if not login(worker_id):
+        #         msg = QMessageBox()
+        #         msg.setIcon(QMessageBox.Information)
+        #
+        #         msg.setText("认证失败，请注册之后再使用！")
+        #         msg.setWindowTitle("提示")
+        #         msg.setStandardButtons(QMessageBox.Ok)
+        #
+        #         msg.exec_()
+        #         return
+        # except:
+        #     return
 
         self.heart_beat_thread = HeartBeatThread(worker_id, conf_path, coin_type)
         self.heart_beat_thread.daemon = True

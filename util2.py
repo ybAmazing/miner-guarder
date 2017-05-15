@@ -60,25 +60,17 @@ def make_zec_id_from_file(file_path, pool_type):
         return make_id(pool_type, ZEC, address, name)
 
 
-def heart_beat(id):
-    while True:
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((HOST, PORT))
-            while True:
-                try:
-                    s.sendall(id)
-                    cmd = s.recv(1024)
-                    if not cmd:
-                        s.close()
-                        break
-                    if cmd == '1':
-                        t = threading.Thread(target=close_open_machine, args=(self.bat_path,))
-                        t.start()
-                except:
-                    pass
-                sleep(TIME_SPAN)
-        except:
-            sleep(TIME_SPAN)
-            pass
-    s.close()
+def login(worker_id):
+    try:
+        conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        conn.connect((HOST, PORT))
+        conn.sendall(worker_id.encode())
+        rsp = conn.recv(1024)
+        rsp = rsp.decode("utf-8")
+        if rsp == '403':
+            return False
+        else:
+            return True
+    except:
+        pass
+    return False
